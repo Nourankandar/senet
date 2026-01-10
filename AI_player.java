@@ -41,6 +41,83 @@ public class AI_player {
         }
         return bestMove; 
     }
+    public int runExpectiminimax3(SenetState state, List<Integer> possibleMoves, int tossResult) {
+
+        int bestMove = possibleMoves.get(0);
+        double maxScore = -Double.MAX_VALUE;
+        Map<Integer, Double> probabilities = Sticks.getProbabilities();
+        int nodesExplored = 0;
+
+        
+        for (int move : possibleMoves) {
+            int target = move + tossResult;
+            if (target >= 30 || (move == 27 && tossResult == 3) || (move == 28 && tossResult == 2) || (move == 29))
+                return move;
+
+            if (target == 25||  (move == 25 && tossResult == 5))
+                return move;
+        }
+
+        for (int move : possibleMoves) {
+            nodesExplored++;
+            SenetState tempState = state.copy();
+            engine.movePiece(tempState, move, tossResult);
+
+            double expectedForThisPiece = 0;
+
+            for (int i = 1; i <= 5; i++) {
+                nodesExplored++;
+                tempState.switchPlayer();
+
+                double worst = Double.MAX_VALUE;
+                List<Integer> oppMoves = engine.getAllPossibleMoves(tempState, i);
+
+                if (oppMoves.isEmpty()) {
+                    worst = Heuristic(tempState);
+                    expectedForThisPiece += probabilities.get(i) * worst;
+                    tempState.switchPlayer();
+                    continue;
+                }
+
+                for (int oppMove : oppMoves) {
+                    nodesExplored++;
+                    SenetState tempState2 = tempState.copy();
+                    engine.movePiece(tempState2, oppMove, i);
+
+                    double bestAIResponse = -Double.MAX_VALUE;
+
+                    for (int aiToss = 1; aiToss <= 5; aiToss++) {
+                        List<Integer> aiMoves = engine.getAllPossibleMoves(tempState2, aiToss);
+
+                        if (aiMoves.isEmpty()) {
+                            bestAIResponse = Math.max(bestAIResponse, Heuristic(tempState2));
+                            continue;
+                        }
+
+                        for (int aiMove : aiMoves) {
+                            SenetState tempState3 = tempState2.copy();
+                            engine.movePiece(tempState3, aiMove, aiToss);
+                            bestAIResponse = Math.max(bestAIResponse, Heuristic(tempState3));
+                        }
+                    }
+
+                    if (bestAIResponse < worst) {
+                        worst = bestAIResponse;
+                    }
+                }
+                expectedForThisPiece += probabilities.get(i) * worst;
+                tempState.switchPlayer();
+            }
+
+            if (expectedForThisPiece > maxScore) {
+                maxScore = expectedForThisPiece;
+                bestMove = move;
+            }
+        }
+        System.out.println("Nodes explored: " + nodesExplored);
+        return bestMove;
+    }
+
     public int runExpectiminimax(SenetState state,List<Integer> possibleMoves ,int tossResult) {
         
         int bestMove = possibleMoves.get(0);
@@ -104,11 +181,11 @@ public class AI_player {
 
             double positionWeight;
             if (i < 10) { 
-                positionWeight = i * 100;       
+                positionWeight = i * 10;       
             } else if (i < 20) { 
                 positionWeight = i * 1000;       
             } else { 
-                positionWeight = i * 10000;     
+                positionWeight = i * 100000;     
             }
 
             if (piece == 2) { 
@@ -116,16 +193,16 @@ public class AI_player {
 
                 if (i == SenetState.HOUSE_OF_HAPPINESS) score += 50000;
                 if (i == SenetState.HOUSE_OF_THREE || i == SenetState.HOUSE_OF_TWO) score += 10000; 
-                if (i == SenetState.HOUSE_OF_HORUS) score += 60000;
+                if (i == SenetState.HOUSE_OF_HORUS) score += 600000;
 
-                if (i == SenetState.HOUSE_OF_WATER) score -= 150000;
+                if (i == SenetState.HOUSE_OF_WATER) score -= 1500000;
 
             } else { 
                 score -= positionWeight;
                 if (i == SenetState.HOUSE_OF_HAPPINESS) score -= 50000;
                 if (i == SenetState.HOUSE_OF_THREE || i == SenetState.HOUSE_OF_TWO) score-=10000;
                 if (i == SenetState.HOUSE_OF_HORUS) score -= 60000;
-                if (i == SenetState.HOUSE_OF_WATER) score += 150000;
+                if (i == SenetState.HOUSE_OF_WATER) score += 1500000;
                 
             }
         }

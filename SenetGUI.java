@@ -135,9 +135,13 @@ public class SenetGUI extends JFrame {
             } else if (val == 2) {
                 grid[i].setText("W"); grid[i].setForeground(Color.BLACK);
                 grid[i].setBackground(i == selectedIdx ? Color.LIGHT_GRAY : Color.WHITE);
-            } else {
-                grid[i].setText(String.valueOf(i + 1));
-                grid[i].setForeground(Color.BLACK);
+            } else  {
+                if (i == 25) grid[i].setText("☀");
+                else if (i == 26) grid[i].setText("≈");
+                else grid[i].setText(String.valueOf(i + 1));
+                grid[i].setForeground(Color.BLACK); 
+                resetSquareColor(i);
+                    
             }
             if (i == targetIdx) {
                 grid[i].setBackground(Color.RED);
@@ -267,7 +271,7 @@ public class SenetGUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Computer has no moves!");
         } else {
             
-            int bestMoveFrom = aiLogic.runExpectiminimax(state, possibleMoves, distance);
+            int bestMoveFrom = aiLogic.runExpectiminimax3(state, possibleMoves, distance);
             engine.movePiece(state, bestMoveFrom, distance);
         }
 

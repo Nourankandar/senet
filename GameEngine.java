@@ -99,7 +99,7 @@ public class GameEngine {
                 list.add(i);
             }
         }
-        print(list, distance);
+        // print(list, distance);
         return list;
     }
 

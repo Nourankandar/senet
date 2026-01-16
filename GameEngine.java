@@ -13,7 +13,6 @@ public class GameEngine {
                 return true;
             }
         }
-
         int target = fromIndex + steps;
         if (fromIndex == SenetState.HOUSE_OF_THREE && steps == 3) {
             exitPiece(state, fromIndex);
@@ -52,7 +51,6 @@ public class GameEngine {
         //مافيه يحرك قطعة مو الو 
         if (state.board[from] != state.currentPlayer)
             return false;
-
         int to = from + distance;
 
         if (from == SenetState.HOUSE_OF_THREE && distance != 3) return false;
@@ -77,7 +75,7 @@ public class GameEngine {
 
     private void moveToRebirth(SenetState state, int idx) {
         if (idx != -1) state.board[idx] = 0 ;
-        System.out.println(state.board[SenetState.HOUSE_OF_WATER]);
+        // System.out.println(state.board[SenetState.HOUSE_OF_WATER]);
         int p = SenetState.HOUSE_OF_REBIRTH;
         while (p >= 0 && state.board[p] != 0) p--;
         if (p >= 0) state.board[p] = state.currentPlayer;

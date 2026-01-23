@@ -40,6 +40,13 @@ public class SenetState {
         newState.whitePiecesOut = this.whitePiecesOut;
         return newState;
     }
+    public void reset() {
+    this.board = new int[30]; 
+    setupBoard(); 
+    this.currentPlayer = 1; 
+    this.blackPiecesOut = 0; 
+    this.whitePiecesOut = 0; 
+}
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

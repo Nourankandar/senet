@@ -9,7 +9,7 @@ public class SenetGUI extends JFrame {
     private GameEngine engine = new GameEngine();
     private JButton[] grid = new JButton[30];
     private JLabel lblStatus, lblDice, lblBOut, lblWOut;
-    private JButton btnToss, btnComputer;
+    private JButton btnToss, btnComputer,btnRestart;
 
     private int distance = 0;
     private boolean canMove = false;
@@ -17,14 +17,19 @@ public class SenetGUI extends JFrame {
     private int targetIdx = -1;
 
     private JRadioButton p1Human, p1Comp, p2Human, p2Comp;
-
+    // أضيفي هذه الأسطر تحت تعريف JRadioButton
+    private JComboBox<String> p1AlgoChoice;
+    private JComboBox<String> p2AlgoChoice;
+    
+    private final String[] ALGORITHMS = {"Random", "decideBestMove", "Expectiminimax 2", "Expectiminimax 3", "Expectiminimax 4"};
+    
     //ألوان الخلفية والمربعات
     private final Color BOARD_BG = new Color(109, 54, 36);
     private final Color SQUARE_BG = new Color(165, 135, 84);
     private final Color PANEL_BG = new Color(210, 195, 160);
 
     //ألوان المربعات الخاصة
-    private final Color SPECIAL_WATER = new Color(64, 158, 176);
+    private final Color SPECIAL_WATER = new Color(42, 105, 140);
     private final Color SPECIAL_REBIRTH = new Color(184, 115, 51);
     private final Color SPECIAL_HAPPINESS = new Color(85, 140, 85);
     private final Color SPECIAL_EXIT = new Color(201, 168, 73);
@@ -76,11 +81,7 @@ public class SenetGUI extends JFrame {
     }
 
     public static void main(String[] args) {
-//        try {
-//            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+
         new SenetGUI();
     }
 
@@ -108,6 +109,7 @@ public class SenetGUI extends JFrame {
             }
         }
         boardWrapper.add(board, BorderLayout.CENTER);
+        
         return boardWrapper;
     }
 
@@ -142,6 +144,7 @@ public class SenetGUI extends JFrame {
     }
 
     private JPanel createTopPanel() {
+        
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(PANEL_BG);
         topPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -168,7 +171,7 @@ public class SenetGUI extends JFrame {
         lblWOut.setFont(EGYPTIAN_FONT_S);
         scorePanel.add(lblBOut); scorePanel.add(lblWOut);
 
-        JPanel settingsPanel = new JPanel(new GridLayout(2,3,5,5));
+        JPanel settingsPanel = new JPanel(new GridLayout(2,6,5,5));
         settingsPanel.setOpaque(false);
         settingsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(BOARD_BG), "Players Setup", 0, 0, EGYPTIAN_FONT_S, BOARD_BG));
 
@@ -176,11 +179,24 @@ public class SenetGUI extends JFrame {
         p2Human = new JRadioButton("Human", true); p2Comp = new JRadioButton("Computer", false);
         p1Human.setOpaque(false); p1Comp.setOpaque(false); p2Human.setOpaque(false); p2Comp.setOpaque(false);
 
+        p1AlgoChoice = new JComboBox<>(ALGORITHMS);
+        p2AlgoChoice = new JComboBox<>(ALGORITHMS);
+        p1AlgoChoice.setEnabled(false);
+        p2AlgoChoice.setEnabled(false);
+        p1AlgoChoice.setFont(new Font("Arial", Font.PLAIN, 10)); 
+        p2AlgoChoice.setFont(new Font("Arial", Font.PLAIN, 10));
+
+        p1Comp.addActionListener(e -> p1AlgoChoice.setEnabled(true));
+        p1Human.addActionListener(e -> p1AlgoChoice.setEnabled(false));
+
+        p2Comp.addActionListener(e -> p2AlgoChoice.setEnabled(true));
+        p2Human.addActionListener(e -> p2AlgoChoice.setEnabled(false));
+
         ButtonGroup g1 = new ButtonGroup(); g1.add(p1Human); g1.add(p1Comp);
         ButtonGroup g2 = new ButtonGroup(); g2.add(p2Human); g2.add(p2Comp);
 
-        settingsPanel.add(new JLabel("P1 (Black):")); settingsPanel.add(p1Human); settingsPanel.add(p1Comp);
-        settingsPanel.add(new JLabel("P2 (White):")); settingsPanel.add(p2Human); settingsPanel.add(p2Comp);
+        settingsPanel.add(new JLabel("P1 (Black):")); settingsPanel.add(p1Human); settingsPanel.add(p1Comp);settingsPanel.add(p1AlgoChoice);
+        settingsPanel.add(new JLabel("P2 (White):")); settingsPanel.add(p2Human); settingsPanel.add(p2Comp);settingsPanel.add(p2AlgoChoice);
 
         topPanel.add(infoPanel, BorderLayout.WEST);
         topPanel.add(scorePanel, BorderLayout.CENTER);
@@ -198,6 +214,15 @@ public class SenetGUI extends JFrame {
         styleButton(btnToss, SPECIAL_REBIRTH);
         btnToss.addActionListener(e -> handleToss());
         btnComputer = new JButton("Execute AI Move");
+        btnRestart = new JButton("Restart Game");
+        styleButton(btnRestart, new Color(139, 0, 0)); 
+        btnRestart.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to restart?", "Restart", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                performRestart();
+            }
+        });
+        bottomPanel.add(btnRestart);
         styleButton(btnComputer, SPECIAL_WATER);
         btnComputer.addActionListener(e -> runComputerAlgorithm());
         bottomPanel.add(btnToss);
@@ -264,6 +289,16 @@ public class SenetGUI extends JFrame {
         else grid[i].setBackground(SQUARE_BG);
     }
 
+    private void performRestart() {
+    state.reset(); 
+    distance = 0;
+    canMove = false;
+    selectedIdx = -1;
+    targetIdx = -1;
+    lblDice.setText("Dice: -");
+    updateTurnStatus();
+    refreshUI();
+}
     // =============================================================================================
 
     private void handleSquareClick(int i) {
@@ -304,8 +339,15 @@ public class SenetGUI extends JFrame {
 
         if (winner != 0) {
             String winnerName = (winner == 1) ? "BLACK" : "WHITE";
-            JOptionPane.showMessageDialog(this, "The winner is: " + winnerName);
-            System.exit(0);
+            int choice = JOptionPane.showConfirmDialog(this, 
+            "The winner is: " + winnerName + "\nDo you want to play again?", 
+            "Game Over", 
+            JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+            performRestart();
+            } else {
+                System.exit(0); 
+            }
         }
     }
 
@@ -314,12 +356,11 @@ public class SenetGUI extends JFrame {
     private void executeConfirmedMove() {
         if (engine.movePiece(state, selectedIdx, distance)) {
             refreshUI();
-            if (state.isGameOver()) {
-                JOptionPane.showMessageDialog(this, "Winner");
-                System.exit(0);
-            }
             checkForVictory();
-            finishTurn();
+            if (!state.isGameOver()) {
+                finishTurn();
+            }
+            
         }
     }
     //----------------------------------
@@ -345,9 +386,6 @@ public class SenetGUI extends JFrame {
             btnComputer.setBackground(SPECIAL_WATER);
         }
     }
-
-
-
 
     //-----------------------------------
     private void handleToss() {
@@ -385,8 +423,30 @@ public class SenetGUI extends JFrame {
                 engine.checkStuckPenalty(state, distance);
                 JOptionPane.showMessageDialog(this, "Computer has no moves!");
             } else {
+                int bestMoveFrom;
+                String selectedAlgo = (state.currentPlayer == 1) 
+                              ? (String) p1AlgoChoice.getSelectedItem() 
+                              : (String) p2AlgoChoice.getSelectedItem();
 
-                int bestMoveFrom = aiLogic.runExpectiminimax3(state, possibleMoves, distance);
+                switch (selectedAlgo) {
+                    case "Random":
+                        bestMoveFrom = aiLogic.RandomMove(state, possibleMoves, distance);
+                        break;
+                    case "decideBestMove":
+                        bestMoveFrom = aiLogic.decideBestMove(state, possibleMoves, distance);
+                        break;
+                    case "Expectiminimax 2":
+                        bestMoveFrom = aiLogic.runExpectiminimax(state, possibleMoves, distance);
+                        break;
+                    case "Expectiminimax 3":
+                        bestMoveFrom = aiLogic.runExpectiminimax3(state, possibleMoves, distance);
+                        break;
+                    case "Expectiminimax 4":
+                        bestMoveFrom = aiLogic.runExpectiminimaxGeneric(state, possibleMoves, distance, 4);
+                        break;
+                    default:
+                        bestMoveFrom = possibleMoves.get(0); 
+                }
                 engine.movePiece(state, bestMoveFrom, distance);
             }
 

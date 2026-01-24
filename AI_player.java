@@ -40,74 +40,86 @@ public class AI_player {
             }
         }
         return bestMove; 
+
+    }  
+private int nodesExplored = 0;
+public int runExpectiminimaxAll(SenetState state, List<Integer> possibleMoves, int tossResult, int depth) {
+        int aiPlayer = state.currentPlayer;
+        int bestMove = possibleMoves.get(0);
+        double maxScore = -Double.MAX_VALUE;
+        nodesExplored = 0; 
+        System.out.println("\n Algorithm with depth " + depth );
+        for (int move : possibleMoves) {
+            int target = move + tossResult;
+            if (target >= 30 || (move == 27 && tossResult == 3) || (move == 28 && tossResult == 2) || (move == 29)){
+                System.out.println("its out: " + (move + 1));
+                return move;
+            }  
+        }
+        for (int move : possibleMoves) {
+            System.out.println("\n  MAX Node " + (move + 1));
+            SenetState tempState = state.copy();
+            engine.movePiece(tempState, move, tossResult);
+            
+            double score = expectiminimax(tempState, depth - 1, false, aiPlayer);
+            System.out.println(" Expected   " + (move + 1) + "  :   " + score);
+            if (score > maxScore) {
+                maxScore = score;
+                bestMove = move;
+            }
+        }
+        System.out.println("\n------------------------------------------");
+        System.out.println("Total Nodes Explored: " + nodesExplored);
+        System.out.println("Best Heuristic Value (Max Score): " + maxScore);
+        System.out.println("Final Chosen Move: " + (bestMove + 1));
+        System.out.println("------------------------------------------\n");
+        return bestMove;
     }
-        public int runExpectiminimaxGeneric(SenetState state, List<Integer> possibleMoves, int tossResult, int depth) {
-            int aiPlayer = state.currentPlayer;
-            int bestMove = possibleMoves.get(0);
-            double maxScore = -Double.MAX_VALUE;
-            
-            for (int move : possibleMoves) {
-                int target = move + tossResult;
-                if (target >= 30 || (move == 27 && tossResult == 3) || (move == 28 && tossResult == 2) || (move == 29))
-                    return move;
-            }
-
-            for (int move : possibleMoves) {
-                SenetState tempState = state.copy();
-                engine.movePiece(tempState, move, tossResult);
-                
-                double score = expectiminimax(tempState, depth - 1, false, aiPlayer);
-                
-                if (score > maxScore) {
-                    maxScore = score;
-                    bestMove = move;
-                }
-            }
-            return bestMove;
+    private double expectiminimax(SenetState state, int depth, boolean nextIsMax, int aiPlayer) {
+        if (depth <= 0 || state.isGameOver()) {
+            return Heuristic(state, aiPlayer);
         }
+        double expectedValue = 0;
+        Map<Integer, Double> probs = Sticks.getProbabilities();
+        
 
-        private double expectiminimax(SenetState state, int depth, boolean isMax, int aiPlayer) {
-            if (depth <= 0 || state.isGameOver()) {
-                return Heuristic(state, aiPlayer);
-            }
-            
-            return chanceNode(state, depth - 1, isMax, aiPlayer);
-        }
-
-        private double chanceNode(SenetState state, int depth, boolean nextIsMax, int aiPlayer) {
-            double expectedValue = 0;
-            Map<Integer, Double> probs = Sticks.getProbabilities();
-            
+        for (int toss = 1; toss <= 5; toss++) {
+            System.out.println("chance node depth: " + depth + " |Toss: " + toss + " | Prob: " + probs.get(toss));
             SenetState nextTurnState = state.copy();
             nextTurnState.switchPlayer(); 
-
-            for (int toss = 1; toss <= 5; toss++) {
-                List<Integer> moves = engine.getAllPossibleMoves(nextTurnState, toss);
-                double val;
-                
-                if (moves.isEmpty()) {
-                    val = Heuristic(nextTurnState, aiPlayer);
+            List<Integer> moves = engine.getAllPossibleMoves(nextTurnState, toss);
+            double val;
+            
+            if (moves.isEmpty()) {
+                val = Heuristic(nextTurnState, aiPlayer);
+                System.out.println("No moves available.  Heuristic: " + val);
+            } else {
+                if (nextIsMax) {
+                    val = -Double.MAX_VALUE;
+                    for (int m : moves) {
+                        SenetState nextState = nextTurnState.copy();
+                        engine.movePiece(nextState, m, toss);
+                        double eval = expectiminimax(nextState, depth - 1, false, aiPlayer);
+                        System.out.println(" Max node  " + (m + 1) + " | Score: " + eval);
+                        if (eval > val) val = eval;
+                    }
                 } else {
-                    if (nextIsMax) {
-                        val = -Double.MAX_VALUE;
-                        for (int m : moves) {
-                            SenetState nextState = nextTurnState.copy();
-                            engine.movePiece(nextState, m, toss);
-                            val = Math.max(val, expectiminimax(nextState, depth, false, aiPlayer));
-                        }
-                    } else {
-                        val = Double.MAX_VALUE;
-                        for (int m : moves) {
-                            SenetState nextState = nextTurnState.copy();
-                            engine.movePiece(nextState, m, toss);
-                            val = Math.min(val, expectiminimax(nextState, depth, true, aiPlayer));
-                        }
+                    val = Double.MAX_VALUE;
+                    for (int m : moves) {
+                        SenetState nextState = nextTurnState.copy();
+                        engine.movePiece(nextState, m, toss);
+                        double eval = expectiminimax(nextState, depth - 1, true, aiPlayer);
+                        System.out.println(" Min node  " + (m + 1) + " | Score: " + eval);
+                        if (eval < val) val = eval;
                     }
                 }
-                expectedValue += probs.get(toss) * val;
             }
-            return expectedValue;
+            expectedValue += probs.get(toss) * val;
         }
+        return expectedValue;
+    }
+//=========================================================================================================
+//---------------------------------------------------------------------------------------------------------
     public int runExpectiminimax3(SenetState state, List<Integer> possibleMoves, int tossResult) {
         int aiPlayer = state.currentPlayer;
         int bestMove = possibleMoves.get(0);

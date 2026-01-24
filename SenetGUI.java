@@ -17,7 +17,6 @@ public class SenetGUI extends JFrame {
     private int targetIdx = -1;
 
     private JRadioButton p1Human, p1Comp, p2Human, p2Comp;
-    // أضيفي هذه الأسطر تحت تعريف JRadioButton
     private JComboBox<String> p1AlgoChoice;
     private JComboBox<String> p2AlgoChoice;
     
@@ -76,7 +75,7 @@ public class SenetGUI extends JFrame {
         updateTurnStatus();
         refreshUI();
 
-        setLocationRelativeTo(null); //تخلي الشاشة بالنص لما نفتحها
+        setLocationRelativeTo(null); 
         setVisible(true);
     }
 
@@ -442,7 +441,7 @@ public class SenetGUI extends JFrame {
                         bestMoveFrom = aiLogic.runExpectiminimax3(state, possibleMoves, distance);
                         break;
                     case "Expectiminimax 4":
-                        bestMoveFrom = aiLogic.runExpectiminimaxGeneric(state, possibleMoves, distance, 4);
+                        bestMoveFrom = aiLogic.runExpectiminimaxAll(state, possibleMoves, distance, 4);
                         break;
                     default:
                         bestMoveFrom = possibleMoves.get(0); 

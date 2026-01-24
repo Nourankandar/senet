@@ -4,6 +4,10 @@ import java.util.List;
 public class GameEngine {
 
     public boolean movePiece(SenetState state, int fromIndex, int steps) {
+
+        //        if (fromIndex == -1) {
+//            return true; // عشان شرط ال1
+//        }
         if (!isValidMove(state, fromIndex, steps)) return false;
 
         int[] exits = {SenetState.HOUSE_OF_THREE, SenetState.HOUSE_OF_TWO};
@@ -110,6 +114,38 @@ public class GameEngine {
         }
         return 0;
     }
+    // هاد هون عشان شرط اخر قطعة وببيت السعادة ورقم النرد 1
+
+
+//    public List<Integer> getAllPossibleMoves(SenetState state, int distance) {
+//        List<Integer> list = new ArrayList<>();
+//
+//        int piecesOnBoard = 0;
+//        int lastPieceIndex = -1;
+//
+//        for (int i = 0; i < 30; i++) {
+//            if (state.board[i] == state.currentPlayer) {
+//                piecesOnBoard++;
+//                lastPieceIndex = i;
+//
+//
+//                if (isValidMove(state, i, distance)) {
+//                    list.add(i);
+//                }
+//            }
+//        }
+//
+//
+//        if (piecesOnBoard == 1 && lastPieceIndex == SenetState.HOUSE_OF_HAPPINESS && distance == 1) {
+//
+//            if (!list.contains(-1)) {
+//                list.add(-1);
+//            }
+//        }
+//
+//        return list;
+//    }
+
 
     public void print( List<Integer> list, int distance) {
         System.out.println("\n-------------------------------------------");

@@ -5,7 +5,8 @@ import java.util.Random;
 public class AI_player {
     private GameEngine engine= new GameEngine();
     private Random random = new Random();
-    
+    private int initialDepth = 0; 
+    private int nodesExplored = 0;
     public int RandomMove(SenetState state, List<Integer> possibleMoves,int distance) {
         int randomIndex = random.nextInt(possibleMoves.size());
         int chosenMove = possibleMoves.get(randomIndex);
@@ -42,7 +43,6 @@ public class AI_player {
         return bestMove; 
 
     }  
-private int nodesExplored = 0;
 public int runExpectiminimaxAll(SenetState state, List<Integer> possibleMoves, int tossResult, int depth) {
         int aiPlayer = state.currentPlayer;
         int bestMove = possibleMoves.get(0);
@@ -57,12 +57,12 @@ public int runExpectiminimaxAll(SenetState state, List<Integer> possibleMoves, i
             }  
         }
         for (int move : possibleMoves) {
-            System.out.println("\n  MAX Node " + (move + 1));
+            System.out.println("\n  MAX Move from Square: " + (move + 1));
             SenetState tempState = state.copy();
             engine.movePiece(tempState, move, tossResult);
             
-            double score = expectiminimax(tempState, depth - 1, false, aiPlayer);
-            System.out.println(" Expected   " + (move + 1) + "  :   " + score);
+            double score = expectiminimax(tempState, depth - 1, false, aiPlayer," ");
+            System.out.println(">>> Result for Move " + (move + 1) + " : " + score);
             if (score > maxScore) {
                 maxScore = score;
                 bestMove = move;
@@ -75,18 +75,22 @@ public int runExpectiminimaxAll(SenetState state, List<Integer> possibleMoves, i
         System.out.println("------------------------------------------\n");
         return bestMove;
     }
-    private double expectiminimax(SenetState state, int depth, boolean nextIsMax, int aiPlayer) {
+    private double expectiminimax(SenetState state, int depth, boolean nextIsMax, int aiPlayer,String indent) {
         if (depth <= 0 || state.isGameOver()) {
             return Heuristic(state, aiPlayer);
         }
         double expectedValue = 0;
         Map<Integer, Double> probs = Sticks.getProbabilities();
-        
+        SenetState nextTurnState = state.copy();
+        nextTurnState.switchPlayer(); 
+
+
+        int currentLevel = initialDepth - depth;
+        System.out.println(indent + "├── [chance level" + currentLevel + "] check " + (nextIsMax ? "AI" : "Opponent") + " turn");
 
         for (int toss = 1; toss <= 5; toss++) {
             System.out.println("chance node depth: " + depth + " |Toss: " + toss + " | Prob: " + probs.get(toss));
-            SenetState nextTurnState = state.copy();
-            nextTurnState.switchPlayer(); 
+            
             List<Integer> moves = engine.getAllPossibleMoves(nextTurnState, toss);
             double val;
             
@@ -99,8 +103,7 @@ public int runExpectiminimaxAll(SenetState state, List<Integer> possibleMoves, i
                     for (int m : moves) {
                         SenetState nextState = nextTurnState.copy();
                         engine.movePiece(nextState, m, toss);
-                        double eval = expectiminimax(nextState, depth - 1, false, aiPlayer);
-                        System.out.println(" Max node  " + (m + 1) + " | Score: " + eval);
+                        double eval = expectiminimax(nextState, depth - 1, false, aiPlayer,indent + "│   ");
                         if (eval > val) val = eval;
                     }
                 } else {
@@ -108,14 +111,15 @@ public int runExpectiminimaxAll(SenetState state, List<Integer> possibleMoves, i
                     for (int m : moves) {
                         SenetState nextState = nextTurnState.copy();
                         engine.movePiece(nextState, m, toss);
-                        double eval = expectiminimax(nextState, depth - 1, true, aiPlayer);
-                        System.out.println(" Min node  " + (m + 1) + " | Score: " + eval);
+                        double eval = expectiminimax(nextState, depth - 1, true, aiPlayer,indent + "│   ");
                         if (eval < val) val = eval;
                     }
                 }
             }
             expectedValue += probs.get(toss) * val;
+            System.out.println(indent + "│   ├── Toss " + toss + " (" + probs.get(toss) + ") -> Value: " + val);
         }
+        System.out.println(indent + "└── [result level 1 " + currentLevel + "]  expected ealue: " + expectedValue);
         return expectedValue;
     }
 //=========================================================================================================

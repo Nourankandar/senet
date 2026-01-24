@@ -1,7 +1,9 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.InputStream;
 import java.util.List;
 
 public class SenetGUI extends JFrame {
@@ -53,13 +55,18 @@ public class SenetGUI extends JFrame {
         getContentPane().setBackground(BOARD_BG);
 
        //هون الأيقونة
+        //هون الأيقونة
         try {
-            Image icon = Toolkit.getDefaultToolkit().getImage("senet_icon.jpg");
-            setIconImage(icon);
+            InputStream imgStream = getClass().getResourceAsStream("/senet_icon.jpg");
+            if (imgStream != null) {
+                Image icon = ImageIO.read(imgStream);
+                this.setIconImage(icon);
+            } else {
+                System.out.println("لم يتم العثور على ملف الصورة! تأكد من وجوده داخل مجلد src");
+            }
         } catch (Exception e) {
-            System.out.println("could'nt load image");
+            e.printStackTrace();
         }
-
         //اللوحات
         add(createTopPanel(), BorderLayout.NORTH);
 
